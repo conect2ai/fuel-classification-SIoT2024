@@ -59,8 +59,8 @@ A tabela abaixo contém os valores das métricas obtidos a partir do Relatório 
 
 |             | Precisão  | Recall | F1-Score | Amostras|
 |-------------|-----------|--------|----------|---------|
-| 0           | 0.89      | 0.79   | 0.84     | 4028    |
-| 1           | 0.81      | 0.88   | 0.86     | 4028    |
+| Gasolina    | 0.89      | 0.79   | 0.84     | 4028    |
+| Etanol      | 0.81      | 0.88   | 0.86     | 4028    |
 | **Accuracy**|           |        | **0.85**| **8048**|
 | **Macro Avg** | 0.85      | 0.85   | 0.85     | 8048    |
 | **Weighted Avg** | 0.85   | 0.85   | 0.85     | 8048    |
