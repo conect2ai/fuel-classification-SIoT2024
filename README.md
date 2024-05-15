@@ -70,3 +70,11 @@ A figura ilustrada abaixo, é possível observar a importância das variáveis p
 <div style="text-align:center">
     <img src="./figures/feature_importance.png" alt="Description of the image">
 </div>
+
+## Licença
+
+Este projeto está licenciado sob a licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
+
+# Sobre nós
+
+O grupo de pesquisa [**Conect2AI**](http://conect2ai.dca.ufrn.br) é composto por alunos de graduação e pós-graduação da Universidade Federal do Rio Grande do Norte (UFRN) e tem como objetivo aplicar Inteligência Artificial (IA) e aprendizado de máquina em campos emergentes. Nossa expertise inclui Inteligência Embarcada e IoT, otimizando a gestão de recursos e a eficiência energética, contribuindo para cidades sustentáveis. Na transição energética e na mobilidade, aplicamos IA para otimizar o uso de energia em veículos conectados e promover uma mobilidade mais sustentável.
