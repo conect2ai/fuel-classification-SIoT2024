@@ -58,11 +58,9 @@ The table below contains the metric values obtained from the Classification Repo
 |-------------|-----------|--------|----------|---------|
 | Gasoline    | 0.76      | 0.99   | 0.86     | 9240    |
 | Ethanol     | 0.98      | 0.70   | 0.81     | 9240    |
-| **Accuracy**|           |        | **0.84** | **9240**|
-| **Macro Avg** | 0.87    | 0.84   | 0.84     | 18480    |
-| **Weighted Avg** | 0.87 | 0.84   | 0.84     | 18480O     |
-
-Offline Accuracy of the prunned model: 0.84048
+| Accuracy|           |        | 0.84 | 9240|
+| Macro Avg | 0.87    | 0.84   | 0.84     | 18480    |
+| Weighted Avg | 0.87 | 0.84   | 0.84     | 18480     |
 
 In the figure illustrated below, you can observe the importance of the variables for the trained model.
 
