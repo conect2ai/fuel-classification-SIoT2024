@@ -48,6 +48,7 @@
 #define STATE_WORKING 0x80
 #define STATE_STANDBY 0x100
 
+byte prediciton_flag = 0xB9;
 byte time_session_flag = 0xB8;
 
 Eloquent::ML::Port::RandomForestClassifier classifier;
@@ -60,21 +61,75 @@ typedef struct {
 } PID_POLLING_INFO;
 
 PID_POLLING_INFO obdData[]= {
-  {PID_LONG_TERM_FUEL_TRIM_1, 1},
-  {PID_INTAKE_TEMP, 1},
-  {PID_BAROMETRIC, 1},
-  {PID_CATALYST_TEMP_B1S1, 1},
-  {PID_CONTROL_MODULE_VOLTAGE, 1},
+  {PID_SHORT_TERM_FUEL_TRIM_1, 1},
+  {PID_TIMING_ADVANCE, 1},
+  {PID_COOLANT_TEMP, 1},
+  {PID_RPM, 1},
   {PID_ENGINE_LOAD, 1},
 };
+// OLD MODEL:
+// ['Barometric pressure (from vehicle)(psi)', 'Intake Air Temperature(°C)', 'Catalyst Temperature (Bank 1 Sensor 1)(°C)', 'Engine Coolant Temperature(°C)','Engine RPM(rpm)']
 
-// ['Barometric pressure (from vehicle)(psi)', 'Intake Air Temperature(°C)', 'Catalyst Temperature (Bank 1 Sensor 1)(°C)', 'Engine Coolant Temperature(°C)','Engine RPM(rpm)']]
+// NEW MODEL:
+// ['FuelTrimB1Short_(t-2)', 'FuelTrimB1Short_(t-1)', 'FuelTrimB1Short_(t)',
+//                    'TimingAdvance_(t-2)', 'TimingAdvance_(t-1)', 'TimingAdvance_(t)',
+//                    'EngCoolantTemp_(t-2)', 'EngCoolantTemp_(t-1)', 'EngCoolantTemp_(t)',
+//                    'RPM_(t-2)', 'RPM_(t-1)', 'RPM_(t)',
+//                   'EngineLoad_(t-2)', 'EngineLoad_(t-1)', 'EngineLoad_(t)'
+// ]
 
+// mean
+// FuelTrimB1Short_(t-2)               -0.596268
+// FuelTrimB1Short_(t-1)               -0.595512
+// FuelTrimB1Short_(t)                 -0.595965
+// TimingAdvance_(t-2)                  9.494426
+// TimingAdvance_(t-1)                  9.490654
+// TimingAdvance_(t)                    9.507194
+// EngCoolantTemp_(t-2)                82.006901
+// EngCoolantTemp_(t-1)                82.006474
+// EngCoolantTemp_(t)                  82.007862
+// RPM_(t-2)                         1414.607116
+// RPM_(t-1)                         1414.669651
+// RPM_(t)                           1414.870558
+// EngineLoad_(t-2)                    33.587935
+// EngineLoad_(t-1)                    33.597615
+// EngineLoad_(t)                      33.607207
 
-float X[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-float means_values[6] = {-3.992668, 37.716719, 14.538872, 623.953239, 14.081866, 40.563002};
-float std_dev_values[6] = {4.397492, 5.985187, 0.065725, 34.173427, 0.183305, 16.813886};
-int count = 0;
+// Stdv
+// FuelTrimB1Short_(t-2)               3.480485
+// FuelTrimB1Short_(t-1)               3.482191
+// FuelTrimB1Short_(t)                 3.482054
+// TimingAdvance_(t-2)                10.917786
+// TimingAdvance_(t-1)                10.917535
+// TimingAdvance_(t)                  10.917261
+// EngCoolantTemp_(t-2)                8.329606
+// EngCoolantTemp_(t-1)                8.331723
+// EngCoolantTemp_(t)                  8.330379
+// RPM_(t-2)                         527.623241
+// RPM_(t-1)                         527.653149
+// RPM_(t)                           527.549474
+// EngineLoad_(t-2)                   19.360041
+// EngineLoad_(t-1)                   19.365361
+// EngineLoad_(t)                     19.374352
+
+// Vector X Used in the classification -> [SIZE = Number of features]
+float X[15] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+// Vector to store the values in t-2 = ['BarometricPressure_(t-2)', 'VoltageControlModule_(t-2)', 'IntakeAirTemp_(t-2)', 'EngineLoad_(t-2)']
+float values_t2[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+// Vector to store the values in t-1 = ['BarometricPressure_(t-1)', 'VoltageControlModule_(t-1)', 'IntakeAirTemp_(t-1)', 'EngineLoad_(t-1)']
+float values_t1[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+// Vector to store the values in t = ['BarometricPressure_(t)', 'VoltageControlModule_(t)', 'IntakeAirTemp_(t)', 'EngineLoad_(t)']
+float values_t[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+
+// Means and Standard Deviation values for the features
+float means_values_t2[5] = {-0.596268, 9.494426, 82.006901, 1414.607116, 33.587935};
+float means_values_t1[5] = {-0.595512, 9.490654, 82.006474, 1414.669651, 33.597615};
+float meand_values_t[5] = {-0.595965, 9.507194, 82.007862, 1414.870558, 33.607207};
+
+float std_dev_values_t2[5] = {3.480485, 10.917786, 8.329606, 527.623241, 19.360041};
+float std_dev_values_t1[5] = {3.482191, 10.917535, 8.331723, 527.653149, 19.365361};
+float std_dev_values_t[5] = {3.482054, 10.917261, 8.330379, 527.549474, 19.374352};
+
 
 CBufferManager bufman;
 Task subtask;
@@ -288,6 +343,20 @@ int handlerLiveData(UrlHandlerParam* param)
   Reading and processing OBD data
 *******************************************************************************/
 #if ENABLE_OBD
+const char* getSensorName(byte pid) {
+    switch(pid) {
+        case 0x07: return "Long Term Fuel Trim 1";
+        case 0x0F: return "Intake Air Temp";
+        case 0x33: return "Barometric Pressure";
+        case 0x3C: return "Catalyst Temp B1S1";
+        case 0x42: return "Control Module Voltage";
+        case 0x04: return "Engine Load";
+        // Add other PID to sensor name mappings here
+        default: return "Unknown Sensor";
+    }
+}
+
+int readFlag = 0; 
 void processOBD(CBuffer* buffer)
 {
 
@@ -301,6 +370,7 @@ void processOBD(CBuffer* buffer)
   
   static int idx[2] = {0, 0};
   int tier = 1;
+  //int read = 0;
   for (byte i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
 
     if (obdData[i].tier > tier) {
@@ -320,24 +390,79 @@ void processOBD(CBuffer* buffer)
     byte pid = obdData[i].pid;
     if (!obd.isValidPID(pid)) continue;
     int value;
+    bool success = false;
     if (obd.readPID(pid, value)) {
         obdData[i].ts = millis();
         obdData[i].value = value;
-
-        if (i < 6) {
-          X[i] = (value - means_values[i]) / std_dev_values[i];
+        
+        // First read - (t-2) -> read = 0
+        if (readFlag == 0 and i < 5) {
+          values_t2[i] = (value - means_values_t2[i]) / std_dev_values_t2[i];
+          //Serial.print("\n[Read_0] = " + String(readFlag));
+          if (i == 4) {
+            readFlag++;
+          }
+        }
+        // Second read - (t-1) -> read = 1
+        else if (readFlag == 1 and i < 5)
+        {
+          values_t1[i] = (value - means_values_t1[i]) / std_dev_values_t1[i];
+          //Serial.print("\n[Read_1] = "+ String(readFlag));
+          if (i == 4) {
+            readFlag++;
+          }
+        }
+        // Third read - (t) -> read = 2
+        else if (readFlag >= 2 and i < 5) {
+          values_t[i] = (value - meand_values_t[i]) / std_dev_values_t[i];
+          //Serial.print("\n[Read_2] = "+ String(readFlag));
         }
         // int result;
-        
-        if (i == 5) {
-          int result = classifier.predict(X);
-          Serial.print("Predicted: ");
-          Serial.println(result);
-        }
+        //Serial.print("\n[PROCESSED (" + String(i) + ")] VALUES: " + String(value));
+        success = true;
     } else {
+        // Use the hexdecimal data and print the name of the corresponding sensor 
+        // that it couldn't read
         timeoutsOBD++;
         printTimeoutStats();
         break;
+        //success = false;
+    }
+    if (i == 4 && success && readFlag==2) {
+          // displays the values in X array to the serial monitor
+          //for (int i = 0; i < 6; i++) {
+          //  Serial.print("\n [PROCESSED] VALUES: " + String(X[i]));
+          //}
+          
+          // Copy the values from the values_t2, values_t1 and values_t to the X array
+          int index = 0;
+	        for (int i = 0; i < 5; ++i) {
+    	      X[index++] = values_t2[i];
+    	      X[index++] = values_t1[i];
+    	      X[index++] = values_t[i];
+	        }
+          // For debug print the values in the X array
+          //for (int i = 0; i < 15; i++) {
+            //Serial.print("\n [PROCESSED] VALUES: " + String(X[i]));
+          //}
+          int result = classifier.predict(X);
+          Serial.println("\n[CLASSIFICATION] Predicted: " + String(result) + "\n");
+          // Save on buffer
+          prediciton_flag = result;
+          buffer -> add(prediciton_flag, ELEMENT_UINT8, &result, sizeof(result));
+          // Now values in t-2 should be updated with the values in t-1
+          // and values in t-1 should be updated with the values in t
+          for (int i = 0; i < 5; i++) {
+            values_t2[i] = values_t1[i];
+            values_t1[i] = values_t[i];
+          }
+    } else {
+      //Serial.print("\nUNABLE TO PERFORM CLASSIFICATION: ");
+      //Serial.print("\nCouldn't read sensor: \n");
+      //Serial.print(pid, HEX);
+      //Serial.print(" (");
+      //Serial.print(getSensorName(pid));
+      //Serial.print(")\n");
     }
     if (tier > 1) break;
   }
