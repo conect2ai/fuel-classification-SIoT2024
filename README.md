@@ -2,79 +2,78 @@
   <img width="800" src="./figures/conecta_logo.png" />
 </p> 
 
-# Classificação de Combustível
+# Fuel Classification
 
-A classificação do tipo de combustível através da coleta de dados dos sensores veiculares, com o auxílio do Tiny Machine Learning (TinyML), é um passo importante na redução das emissões de carbono e na promoção da sustentabilidade no setor automotivo. Ao identificar o tipo de combustível utilizado por um veículo, seja gasolina ou etanol, por exemplo, os sistemas de gestão de emissões podem calcular com maior exatidão a quantidade de carbono liberada durante o seu uso. Isso não apenas permite uma avaliação mais precisa do impacto ambiental de cada veículo, mas também possibilita a implementação de políticas e incentivos para veículos mais limpos e eficientes. Com o TinyML, essa classificação pode ser realizada de forma eficiente, em tempo real e na borda da rede, contribuindo para uma gestão mais eficaz das emissões veiculares e para a promoção de uma mobilidade sustentável.
+Classifying the type of fuel through data collection from vehicle sensors, with the aid of Tiny Machine Learning (TinyML), is an important step in reducing carbon emissions and promoting sustainability in the automotive sector. By identifying the type of fuel used by a vehicle, whether gasoline or ethanol, for example, emission management systems can more accurately calculate the amount of carbon released during its use. This not only allows for a more precise assessment of the environmental impact of each vehicle but also enables the implementation of policies and incentives for cleaner and more efficient vehicles. With TinyML, this classification can be performed efficiently, in real-time, and at the edge of the network, contributing to more effective vehicle emission management and promoting sustainable mobility.
 
-## Como executar
+## How to run
 
-A execução deste projeto se dá em duas etapas. A primeira refere-se a coleta dos dados, o treinamento do modelo de aprendizado de máquina e a sua geração no formato a ser embarcado no hardware. A segunda parte refere-se a incorporação em si.
+The execution of this project is done in two stages. The first refers to data collection, machine learning model training, and its generation in the format to be embedded in the hardware. The second part refers to the incorporation itself.
 
-### Treinamento e geração do modelo em C++
+### Training and generating the model in C++
 
-Para realizar o treinamento e a geração do modelo em C++, coloque o arquivo [notebook](./ClassificadorDeCombustivel.ipynb) na sua conta do [Google Colab](https://colab.google/) e execcute-o. 
+To perform the training and generation of the model in C++, upload the [notebook](./FuelClassificationModel.ipynb) to your [Google Colab](https://colab.google/) account and execute it.
 
-O notebook irá gerar um arquivo chamado `classifier.h`. Coloque este arquivo na pasta `./Freematics/firmware_v5/telelogger`
+The notebook will generate a file called `classifier.h`. Place this file in the `./Freematics/firmware_v5/telelogger` folder.
 
-OBS.: Por questões de proteção dos dados, não será disponibilizado os dados utilizados para realizar o treinamento deste modelo. Contudo, o artefato do modelo já se encontra dentro da pasta a ser incorporada no Freematics One+.
+Note: For data protection reasons, the data used to train this model will not be provided. However, the model artifact is already included in the folder to be incorporated into the Freematics One+.
 
 ### Freematics
 
-1 - Instale o [Visual Studio Code](https://code.visualstudio.com/)
-
-2 - Installe o [PlatformIO](https://platformio.org/) (Extensão do VSCode)
-
-3 - Clone este repositório
+1. Install [Visual Studio Code](https://code.visualstudio.com/)
+2. Install [PlatformIO](https://platformio.org/) (VSCode Extension)
+3. Clone this repository:
 
 ```bash
-git clone https://github.com/conect2ai/fuel-classification-CBA2024.git
+git clone hhttps://github.com/conect2ai/fuel-classification-SIoT2024.git
 ```
 
-4 - Abra a pasta do projeto `./Freematics/firmware_v5/telelogger` no PlatformIO, como ilustrado na figura abaixo.
+4. Open the project folder `./Freematics/firmware_v5/telelogger` on PlatformIO, as illustrated in the figure below.
 
 <p align="center">
   <img width="800" src="./figures/platformio.png" />
 </p> 
 
-5 - Conecte o Freematics One+ ao computador e ligue-o com o Freematics Emulator ou no veículo.
+5. Connect the Freematics One+ to your computer and turn it on using the Freematics Emulator or in the vehicle.
 
-6 - Compile, faça o upload e monitore o serial (etapas 1, 2 e 3, respectivamente na figura abaixo).
+6. Compile, upload and monitor the serial (steps 1, 2 and 3, respectively in the figure below).
 
 <p align="center">
   <img width="800" src="./figures/upload.png" />
 </p> 
 
+## Results of the case study
 
-## Resultados do estudo de caso
+To evaluate the pruned model in C++, the file [main.cpp](./Analysis/main.cpp) was used to load the model and generate the inferences in a csv file. This file was then loaded into a Jupyter notebook to generate the evaluation metrics. Among the metrics used, the confusion matrix and the scikit-learn classification report were used, which calculate accuracy, recall, precision, and F1-score. The codes used to generate the graphs below are in the file [process_csv.ipynb](./Analysis/process_csv.ipynb).
 
-Para avaliar o resultado da classificação, foram utilizadas a matriz de confusão e o reatório da classificação da biblioteca scikit-learn, o qual calcula a acurácia, recall, precisão e F1-score. Os códigos utilizados para gerar os gráficos abaixo encontram-se no arquivo [notebook.ipynb](./Analysis/notebook.ipynb)
-
-A figura abaixo ilustra a matriz de confusão obtida.
+The figure below illustrates the obtained confusion matrix.
 
 <div style="text-align:center">
-    <img src="./figures/confusion_matrix.png" alt="Description of the image">
+ <img src="./figures/confusion_matrix.jpeg" alt="Description of the image">
 </div>
 
-A tabela abaixo contém os valores das métricas obtidos a partir do Relatório da Classificação.
+The table below contains the metric values obtained from the Classification Report.
 
-|             | Precisão  | Recall | F1-Score | Amostras|
+|             | Precision | Recall | F1-Score | Samples |
 |-------------|-----------|--------|----------|---------|
-| Gasolina    | 0.89      | 0.79   | 0.84     | 4028    |
-| Etanol      | 0.81      | 0.88   | 0.86     | 4028    |
-| **Accuracy**|           |        | **0.85**| **8048**|
-| **Macro Avg** | 0.85      | 0.85   | 0.85     | 8048    |
-| **Weighted Avg** | 0.85   | 0.85   | 0.85     | 8048    |
+| Gasoline    | 0.76      | 0.99   | 0.86     | 9240    |
+| Ethanol     | 0.98      | 0.70   | 0.81     | 9240    |
+| **Accuracy**|           |        | **0.84** | **9240**|
+| **Macro Avg** | 0.87    | 0.84   | 0.84     | 18480    |
+| **Weighted Avg** | 0.87 | 0.84   | 0.84     | 18480O     |
 
-A figura ilustrada abaixo, é possível observar a importância das variáveis para o modelo treinado.
+Offline Accuracy of the prunned model: 0.84048
+
+In the figure illustrated below, you can observe the importance of the variables for the trained model.
 
 <div style="text-align:center">
-    <img src="./figures/feature_importance.png" alt="Description of the image">
+ <img src="./figures/feature_importance.png" alt="Description of the image">
 </div>
 
-## Licença
+## License
 
-Este projeto está licenciado sob a licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-# Sobre nós
+# About us
 
-O grupo de pesquisa [**Conect2AI**](http://conect2ai.dca.ufrn.br) é composto por alunos de graduação e pós-graduação da Universidade Federal do Rio Grande do Norte (UFRN) e tem como objetivo aplicar Inteligência Artificial (IA) e aprendizado de máquina em campos emergentes. Nossa expertise inclui Inteligência Embarcada e IoT, otimizando a gestão de recursos e a eficiência energética, contribuindo para cidades sustentáveis. Na transição energética e na mobilidade, aplicamos IA para otimizar o uso de energia em veículos conectados e promover uma mobilidade mais sustentável.
+The research group [**Conect2AI**](http://conect2ai.dca.ufrn.br) consists of undergraduate and graduate students from the Federal University of Rio Grande do Norte (UFRN) and aims to apply Artificial Intelligence (AI) and machine learning in emerging fields. Our expertise includes Embedded Intelligence and IoT, optimizing resource management and energy efficiency, contributing to sustainable cities. In energy transition and mobility, we apply AI to optimize energy use in connected vehicles and promote more sustainable mobility.
